@@ -3,7 +3,7 @@ import time
 import serial
 from datetime import datetime
 
-#ser = serial.Serial("COM3", 9600, timeout=1)
+ser = serial.Serial("COM3", 9600, timeout=1)
 #time.sleep(2)
 url = "http://127.0.0.1/Z-planning/api/"
 matrice_led = [
@@ -45,7 +45,7 @@ def postazioni(id_badge: str) -> None:
             for postazione in postazioni:
                 msg_to_display += postazione + "  "
 
-            msg_to_display = 'D ' + msg_to_display + '\n'
+            msg_to_display = 'D:' + msg_to_display + '\n'
             #ser.write(msg_to_display.encode("utf-8"))
 
             time.sleep(0.2)
@@ -56,7 +56,6 @@ def postazioni(id_badge: str) -> None:
     except requests.RequestException as e:
         print("Errore nella richiesta:", e)
     return
-
 
 def parcheggio(id_badge: str) -> None:
     oggi = datetime.today()
@@ -122,4 +121,20 @@ def postazioniLibere() -> None:
         print("Errore nella richiesta:", e)
     return
 
-postazioniLibere()
+def cmdDetector(msg: str) -> None: #gli viene passata la stringa ricevuta in seriale, riconosce e esegue il comando
+    cmd = msg.split(';')
+    if cmd[0] == "POS":
+        postazioni(cmd[1])
+        return
+    if cmd[0] == "PAR":
+        parcheggio(cmd[1])
+        return
+    return
+
+#postazioniLibere()
+
+
+while True:
+    if ser.in_waiting > 0:  # controlla se ci sono dati disponibili
+        serial_msg = ser.readline().decode("utf-8").rstrip()
+        cmdDetector(serial_msg)
