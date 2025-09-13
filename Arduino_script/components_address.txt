@@ -1,0 +1,3 @@
+ht16k33 0x70
+schermo lcd 0x27
+lettore NFC 0x24
