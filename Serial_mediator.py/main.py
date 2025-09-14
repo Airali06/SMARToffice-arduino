@@ -4,8 +4,9 @@ import serial
 from datetime import datetime
 
 ser = serial.Serial("COM3", 9600, timeout=1)
-#time.sleep(2)
+time.sleep(2)
 url = "http://127.0.0.1/Z-planning/api/"
+
 matrice_led = [
     ["1A1", "00"], ["2A1", "01"], ["3A1", "02"], ["4A1", "03"], ["5A1", "04"], ["6A1", "05"], ["7A1", "06"], ["8A1", "07"],
     ["6A2", "10"], ["7A2", "11"], ["8A2", "12"], ["9A2", "13"], ["10A2", "14"], ["11A2", "15"], ["12A2", "16"], ["13A2", "17"],
@@ -40,18 +41,17 @@ def postazioni(id_badge: str) -> None:
             msg_to_display += "/oggi hai prenotato/"
             postazioni = risposta['postazioni'].split(';')
             postazioni.pop()
-            #print("postazioni:  ", postazioni)
+            print("postazioni:  ", postazioni)
 
             for postazione in postazioni:
                 msg_to_display += postazione + "  "
 
-            msg_to_display = 'D:' + msg_to_display + '\n'
-            #ser.write(msg_to_display.encode("utf-8"))
-
-            time.sleep(0.2)
-            msg = ""
-            msg = "SI\n"
-            # ser.write(msg("utf-8"))
+        msg_to_display = 'D:' + msg_to_display + '\n'
+        print(msg_to_display)
+        ser.write(msg_to_display.encode("utf-8"))
+        ser.write("SI\n".encode("utf-8"))
+        print(msg_to_display)
+        time.sleep(0.2)
 
     except requests.RequestException as e:
         print("Errore nella richiesta:", e)
@@ -80,7 +80,7 @@ def parcheggio(id_badge: str) -> None:
         if risposta['msg'] == "OK":
             msg = "SP\n"
 
-        #ser.write(msg("utf-8"))
+            ser.write(msg("utf-8"))
 
     except requests.RequestException as e:
         print("Errore nella richiesta:", e)
@@ -111,18 +111,19 @@ def postazioniLibere() -> None:
         for postazione in postazioni:
             for coordinate in matrice_led:
                 if coordinate[0] == postazione:
-                    msg+=coordinate[1]+"/"
+                    msg+=coordinate[1]
 
 
         print(msg)
-        # ser.write(msg("utf-8"))
+        ser.write(msg("utf-8"))
 
     except requests.RequestException as e:
         print("Errore nella richiesta:", e)
     return
 
 def cmdDetector(msg: str) -> None: #gli viene passata la stringa ricevuta in seriale, riconosce e esegue il comando
-    cmd = msg.split(';')
+    cmd = msg.split(':')
+    print(msg)
     if cmd[0] == "POS":
         postazioni(cmd[1])
         return
@@ -131,10 +132,13 @@ def cmdDetector(msg: str) -> None: #gli viene passata la stringa ricevuta in ser
         return
     return
 
-#postazioniLibere()
 
+
+#postazioniLibere()
+time.sleep(1)
 
 while True:
+
     if ser.in_waiting > 0:  # controlla se ci sono dati disponibili
         serial_msg = ser.readline().decode("utf-8").rstrip()
         cmdDetector(serial_msg)
