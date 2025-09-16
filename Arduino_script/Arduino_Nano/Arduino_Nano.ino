@@ -8,6 +8,8 @@
 #define PN532_IRQ   (2)
 #define PN532_RESET (3)
 #define sensore 7
+#define verde 4
+#define rosso 3
 
 //--- indirizzi I2C---------------------------------
 #define TCAADDR 0x72  //switch I2C per lettori nfc
@@ -24,7 +26,7 @@ Servo servoP; //servo parcheggio
 int pos_servoI = 1;
 int pos_servoP = 1;
 const long interval_servoI = 4000;
-const long interval_servoP = 20000;
+const long interval_servoP = 2000;
 unsigned long timer_servoI = 0;
 unsigned long timer_servoP = 0;
 
@@ -32,7 +34,7 @@ unsigned long timer_display = 0;
 const long interval_display = 10000;
 bool display_in_use = false;
 
-// --- helper: converte uint64_t in String decimale (senza usare sprintf che su AVR può essere limitato)
+
 String uint64ToString(uint64_t v) {
   if (v == 0) return "0";
   char buf[32];
@@ -100,9 +102,11 @@ void serialReader(){ //legge la seriale e interpreta il comando
     timer_servoI = millis();
     return;
   }
-  if(input=="SP"){
+  if(input == "SP"){
     servoP.write(90);
     delay(100);
+    digitalWrite(rosso,LOW);
+    digitalWrite(verde,HIGH);
     pos_servoP = 90;
     timer_servoP = millis();
     return;
@@ -146,10 +150,12 @@ void checkServo(){
   if(pos_servoP != 1 && currentMillis - timer_servoP >= interval_servoP){
     if(!rilevaOstacolo()){
       servoP.write(1);
+      digitalWrite(verde,LOW);
+    digitalWrite(rosso,HIGH);
       pos_servoP = 1;
     } else {
       // se ostacolo ancora presente, rimetti timer per ritentare dopo un altro intervallo
-      timer_servoP = currentMillis;
+      timer_servoP = currentMillis + "2000";
     }
   }
 }
@@ -216,6 +222,10 @@ void setup(void) {
 
   Wire.begin();
   Serial.begin(9600);
+  pinMode(verde, OUTPUT);
+  pinMode(rosso, OUTPUT);
+  digitalWrite(verde,LOW);
+  digitalWrite(rosso,HIGH);
   
   //while (!Serial) { delay(10); } // opzionale: se la board non ha seriale nativa potrebbe bloccare; se vuoi, togli questa riga
  
@@ -243,11 +253,13 @@ void setup(void) {
   matrix.writeDisplay();
 
 //---SERVO--------------------------------------
-Serial.println("ciao");
+
  servoI.attach(5);
  servoP.attach(6);
   servoI.write(1);
   servoP.write(1); 
+  delay(100);
+
 
 //----NFC----------------------------------------
 

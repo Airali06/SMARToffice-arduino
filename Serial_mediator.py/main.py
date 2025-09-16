@@ -20,6 +20,7 @@ matrice_led = [
 def postazioni(id_badge: str) -> None:
     oggi = datetime.today()
     data_formattata = oggi.strftime("%Y-%m-%d")
+    print(data_formattata)
     data = {
         "id_badge": id_badge,
         "data": data_formattata
@@ -31,12 +32,15 @@ def postazioni(id_badge: str) -> None:
         print(risposta)
 
         if risposta['errore'] == "errore":
+            msg_to_display = "D:ERRORE/badge non valido :("
+            ser.write(msg_to_display.encode("utf-8"))
+            print(msg_to_display)
             return
 
         msg_to_display = ""
         msg_to_display = "benvenuto " + risposta['username']
         if risposta['postazioni'] == "NONE":
-            msg_to_display += "/non hai prenotazioni oggi"
+            msg_to_display += "/    non hai nessuna/   oggi"
         else:
             msg_to_display += "/oggi hai prenotato/"
             postazioni = risposta['postazioni'].split(';')
@@ -78,9 +82,9 @@ def parcheggio(id_badge: str) -> None:
 
         msg = ""
         if risposta['msg'] == "OK":
-            msg = "SP\n"
+            msg = "SP"
 
-            ser.write(msg("utf-8"))
+            ser.write(msg.encode("utf-8"))
 
     except requests.RequestException as e:
         print("Errore nella richiesta:", e)
