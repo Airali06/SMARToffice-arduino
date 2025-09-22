@@ -43,7 +43,7 @@ def postazioni(id_badge: str) -> None:
         msg_to_display = ""
         msg_to_display = "benvenuto " + risposta['username']
         if risposta['postazioni'] == "NONE":
-            msg_to_display += "/    non hai nessuna/   oggi"
+            msg_to_display += "/    non hai nessuna/prenotazione oggi"
         else:
             msg_to_display += "/oggi hai prenotato/"
             postazioni = risposta['postazioni'].split(';')
