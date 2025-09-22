@@ -93,7 +93,7 @@ void serialReader(){ //legge la seriale e interpreta il comando
   String input = Serial.readStringUntil('\n');
   input.trim();
   if (input.length() == 0) return;
-  Serial.println("ARDUINO: "+input);
+  Serial.println(input);
 
   if(input == "SI"){
     servoI.write(90);
@@ -103,7 +103,7 @@ void serialReader(){ //legge la seriale e interpreta il comando
     return;
   }
   if(input == "SP"){
-    servoP.write(90);
+    servoP.write(-180);
     delay(100);
     digitalWrite(rosso,LOW);
     digitalWrite(verde,HIGH);
@@ -112,8 +112,8 @@ void serialReader(){ //legge la seriale e interpreta il comando
     return;
   }
 
-  if(input.startsWith("M:")){
-    input.remove(0, 2); // rimuove "M:"
+  if(input.startsWith("M")){
+    input.remove(0, 1); // rimuove "M:"
     aggiornaMatrice(input);
     return;
   }
@@ -149,7 +149,7 @@ void checkServo(){
 
   if(pos_servoP != 1 && currentMillis - timer_servoP >= interval_servoP){
     if(!rilevaOstacolo()){
-      servoP.write(1);
+      servoP.write(90);
       digitalWrite(verde,LOW);
     digitalWrite(rosso,HIGH);
       pos_servoP = 1;
@@ -171,15 +171,17 @@ void checkLCDdisplay(){
 void aggiornaMatrice(String coordinate){
   matrix.clear();
   // attendiamo coppie di cifre x,y (es: "0314" -> (0,3) e (1,4))
-  for(int i = 0; i + 1 < coordinate.length(); i += 2){
+  for(int i = 0; i + 1 <= coordinate.length()+1; i += 2){
     char cx = coordinate.charAt(i);
     char cy = coordinate.charAt(i+1);
     if (isDigit(cx) && isDigit(cy)) {
-      int x = cx - '0';
-      int y = cy - '0';
-      if (x >= 0 && x < 16 && y >= 0 && y < 8) { // bounds per matrice 8x16: x:0..15, y:0..7
+      int x = (cx - '0')*1;
+      int y = (cy - '0')*1;// bounds per matrice 8x16: x:0..15, y:0..7
+       Serial.print(x);
+        Serial.println(y);
         matrix.drawPixel(x, y, LED_ON);
-      }
+      
+      matrix.writeDisplay();
     }
   }
   matrix.writeDisplay();
@@ -252,12 +254,14 @@ void setup(void) {
   matrix.clear();
   matrix.writeDisplay();
 
+ 
+
 //---SERVO--------------------------------------
 
  servoI.attach(5);
  servoP.attach(6);
   servoI.write(1);
-  servoP.write(1); 
+  servoP.write(90); 
   delay(100);
 
 
@@ -294,6 +298,8 @@ void setup(void) {
 
 void loop(void) {
   // lettore 1
+
+
   
   channelSelect(1);
   nfcReader(1);
